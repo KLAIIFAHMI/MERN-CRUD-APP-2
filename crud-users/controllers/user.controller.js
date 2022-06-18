@@ -1,16 +1,29 @@
 const Users = require('../models/users.model')
+const ValidateUser = require("../validation/users.valdiation");
+
+
 
 
 const Adduser = async (req, res) => {
+    const { errors, isValid } = ValidateUser(req.body);
     try {
-        await Users.create(req.body)
-        res.status(200).json({ message: req.body.Firstname + " " + req.body.Lastname + " " + 'added with succes' })
-
+      if (!isValid) {
+        res.status(404).json(errors);
+      } else {
+        await Users.findOne({ Email: req.body.Email }).then(async (exist) => {
+          if (exist) {
+            errors.Email = "User Exist";
+            res.status(404).json(errors);
+          } else {
+            await Users.create(req.body);
+            res.status(201).json({ message: "User added with success" });
+          }
+        });
+      }
     } catch (error) {
-        console.log(error.message)
+      console.log(error.message);
     }
-
-}
+  };
 
 
 const FindallUsers = async (req, res) => {
@@ -40,17 +53,22 @@ const FindSingle = async (req, res) => {
 }
 
 const Updateuser = async (req, res) => {
-
+    const { errors, isValid } = ValidateUser(req.body);
     try {
-
-        const data = await Users.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true });
-        res.status(200).json(data)
-
+      if (!isValid) {
+        res.status(404).json(errors);
+      } else {
+        const data = await Users.findOneAndUpdate(
+          { _id: req.params.id },
+          req.body,
+          { new: true }
+        );
+        res.status(201).json(data);
+      }
     } catch (error) {
-        console.log(error.message)
-
+      console.log(error.message);
     }
-}
+  };
 
 const deleteuser = async (req, res) => {
 
